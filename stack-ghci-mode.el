@@ -28,6 +28,7 @@
 ;;; stack-ghci-mode.el ends here
 
 (require 'comint)
+(require 'easymenu)
 
 (defconst stack-ghci-mode-version "0.0.1"
   "The version of `stack-ghci-mode'.")
@@ -49,9 +50,12 @@
 
 (defvar stack-ghci-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-b") 'stack-ghci-mode)))
+    (define-key map (kbd "C-c C-r") 'stack-ghci-send-region)
+    (define-key map (kbd "C-c C-z") 'stack-ghci-repl)
+    map)
+  "Keymap for stack ghci major mode.")
 
-(defun stack-ghci-mode ()
+(defun stack-ghci-repl ()
   "Launch a Stackghci REPL using `haskel-command' as an inferior mode."
   (interactive)
 
@@ -62,3 +66,30 @@
 	    nil
 	    ghci-args)))
   (pop-to-buffer stack-ghci-buffer))
+
+(defun stack-ghci-get-repl-proc ()
+  (unless (comint-check-proc stack-ghci-buffer)
+    (stack-ghci-repl))
+  (get-buffer-process stack-ghci-buffer))
+
+(defun stack-ghci-send-region (start end)
+  "Send the current region to the inferior ghci process."
+  (interactive "r")
+  (deactivate-mark t)
+  (let* ((string (buffer-substring-no-properties start end))
+         (proc (stack-ghci-get-repl-proc))
+         (multiline-escaped-string
+          (replace-regexp-in-string "\n" "\uFF00" string)))
+    (comint-simple-send proc multiline-escaped-string)))
+
+;;
+;; Menubar
+;;
+
+;; (easy-menu-define stack-ghci-mode-menu stack-ghci-mode-map
+;;   "Menu for stack ghci mode"
+;;   '("StackGHCI"
+;;     ["REPL" stack-ghci-repl]
+;;     "---"
+;;     ["Version" stack-ghci-mode-version]
+;;     ))
