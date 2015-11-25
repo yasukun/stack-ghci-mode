@@ -61,6 +61,8 @@
     (define-key map (kbd "C-c C-r") 'stack-ghci-send-region)
     (define-key map (kbd "C-c C-b") 'stack-ghci-revert-buffer)
     (define-key map (kbd "C-c C-g") 'stack-ghci-repl)
+    (define-key map (kbd "C-c C-s") 'stack-ghci-send-sprint)
+    (define-key map (kbd "C-c C-t") 'stack-ghci-send-type)
     map)
   "Keymap for stack ghci major mode.")
 
@@ -111,6 +113,18 @@
   (interactive)
   (message (conncat "stack-ghci-mode version " stack-ghci-mode-version)))
 
+(defun stack-ghci-send-sprint (x)
+  (interactive "s:sprint ")
+  (deactivate-mark t)
+  (let* ((proc (stack-ghci-get-repl-proc)))
+    (comint-simple-send proc (format ":sprint %s" x))))
+
+(defun stack-ghci-send-type (x)
+  (interactive "s:t ")
+  (deactivate-mark t)
+  (let* ((proc (stack-ghci-get-repl-proc)))
+    (comint-simple-send proc (format ":t %s" x))))
+
 ;;
 ;; Menubar
 ;;
@@ -129,8 +143,6 @@
 ;;;###autoload
 (define-derived-mode stack-ghci-mode haskell-mode "StackGHCI"
   "Major mode for editing haskell.")
-
-
 
 (provide 'stack-ghci-mode)
 
