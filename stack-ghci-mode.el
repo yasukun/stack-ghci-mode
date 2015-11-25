@@ -138,7 +138,7 @@
 ;; On Load
 ;;
 
-;; Run coffee-mode for files ending in .coffee.
+;; Run stack-ghci-mode for files ending in .hs.
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.hs\\'" . stack-ghci-mode))
 
