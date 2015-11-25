@@ -63,6 +63,7 @@
     (define-key map (kbd "C-c C-g") 'stack-ghci-repl)
     (define-key map (kbd "C-c C-s") 'stack-ghci-send-sprint)
     (define-key map (kbd "C-c C-t") 'stack-ghci-send-type)
+    (define-key map (kbd "C-c C-m") 'stack-ghci-send-add-module)
     map)
   "Keymap for stack ghci major mode.")
 
@@ -99,7 +100,9 @@
 
 (defun stack-ghci-revert-buffer ()
   (interactive)
-  (stack-ghci-send-command ghci-reload-command))
+  (progn
+    (save-buffer)
+    (stack-ghci-send-command ghci-reload-command)))
 
 (defun stack-ghci-send-command (cmd)
   "Send the command to the inferior ghci process."
@@ -124,6 +127,12 @@
   (deactivate-mark t)
   (let* ((proc (stack-ghci-get-repl-proc)))
     (comint-simple-send proc (format ":t %s" x))))
+
+(defun stack-ghci-send-add-module (x)
+  (interactive "s:m + ")
+  (deactivate-mark t)
+  (let* ((proc (stack-ghci-get-repl-proc)))
+    (comint-simple-send proc (format ":m + %s" x))))
 
 ;;
 ;; Menubar
