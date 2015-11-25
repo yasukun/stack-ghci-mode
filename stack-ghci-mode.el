@@ -3,7 +3,7 @@
 ;; Copyright (C) 2015  yasukun
 
 ;; Author: yasukun <https://twitter.com/sukezo>
-;; Keywords: processes, comm
+;; Keywords: processes
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,9 +24,6 @@
 
 ;;; Code:
 
-;; (provide 'stack-ghci-mode)
-;;; stack-ghci-mode.el ends here
-
 (require 'comint)
 (require 'easymenu)
 
@@ -36,6 +33,11 @@
 (defcustom stack-ghci-buffer "*StackGHCI*"
   "The name of the Stack ghci repl buffer"
   :type 'string
+  :group 'stack-ghci)
+
+(defcustom stack-ghci-mode-hook nil
+  "Hook called by `stack-ghci-mode'."
+  :type 'hook
   :group 'stack-ghci)
 
 (defcustom stack-command "stack"
@@ -48,10 +50,17 @@
   :type 'list
   :group 'stack-ghci)
 
+(defcustom ghci-reload-command ":reload"
+  "The argument to pass to `stack-ghci' to reload a ghci."
+  :type 'string
+  :group 'stack-ghci)
+
 (defvar stack-ghci-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-l") 'stack-ghci-send-line)
     (define-key map (kbd "C-c C-r") 'stack-ghci-send-region)
-    (define-key map (kbd "C-c C-z") 'stack-ghci-repl)
+    (define-key map (kbd "C-c C-b") 'stack-ghci-revert-buffer)
+    (define-key map (kbd "C-c C-g") 'stack-ghci-repl)
     map)
   "Keymap for stack ghci major mode.")
 
@@ -72,6 +81,10 @@
     (stack-ghci-repl))
   (get-buffer-process stack-ghci-buffer))
 
+(defun stack-ghci-send-line ()
+  (interactive)
+  (stack-ghci-send-region (line-beginning-position) (line-end-position)))
+
 (defun stack-ghci-send-region (start end)
   "Send the current region to the inferior ghci process."
   (interactive "r")
@@ -82,14 +95,51 @@
           (replace-regexp-in-string "\n" "\uFF00" string)))
     (comint-simple-send proc multiline-escaped-string)))
 
+(defun stack-ghci-revert-buffer ()
+  (interactive)
+  (stack-ghci-send-command ghci-reload-command))
+
+(defun stack-ghci-send-command (cmd)
+  "Send the command to the inferior ghci process."
+  (interactive)
+  (deactivate-mark t)
+  (let* ((proc (stack-ghci-get-repl-proc)))
+    (comint-simple-send proc cmd)))
+
+(defun stack-ghci-version ()
+  "Show the `stack-ghci-mode' version in the echo area."
+  (interactive)
+  (message (conncat "stack-ghci-mode version " stack-ghci-mode-version)))
+
 ;;
 ;; Menubar
 ;;
 
-;; (easy-menu-define stack-ghci-mode-menu stack-ghci-mode-map
-;;   "Menu for stack ghci mode"
-;;   '("StackGHCI"
-;;     ["REPL" stack-ghci-repl]
-;;     "---"
-;;     ["Version" stack-ghci-mode-version]
-;;     ))
+(easy-menu-define stack-ghci-mode-menu stack-ghci-mode-map
+  "Menu for stack ghci mode"
+  '("StackGHCI"
+    ["REPL" stack-ghci-repl]
+    "---"
+    ["Version" stack-ghci-version]))
+
+;;
+;; Define Major Mode
+;;
+
+;;;###autoload
+(define-derived-mode stack-ghci-mode haskell-mode "StackGHCI"
+  "Major mode for editing haskell.")
+
+
+
+(provide 'stack-ghci-mode)
+
+;;
+;; On Load
+;;
+
+;; Run coffee-mode for files ending in .coffee.
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.hs\\'" . stack-ghci-mode))
+
+;;; stack-ghci-mode.el ends here
