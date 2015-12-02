@@ -61,9 +61,7 @@
     (define-key map (kbd "C-c C-r") 'stack-ghci-send-region)
     (define-key map (kbd "C-c C-b") 'stack-ghci-revert-buffer)
     (define-key map (kbd "C-c C-g") 'stack-ghci-repl)
-    (define-key map (kbd "C-c C-s") 'stack-ghci-send-sprint)
-    (define-key map (kbd "C-c C-t") 'stack-ghci-send-type)
-    (define-key map (kbd "C-c C-m") 'stack-ghci-send-add-module)
+    (define-key map (kbd "C-c C-s") 'stack-ghci-send-commands)
     map)
   "Keymap for stack ghci major mode.")
 
@@ -100,39 +98,22 @@
 
 (defun stack-ghci-revert-buffer ()
   (interactive)
-  (progn
-    (save-buffer)
-    (stack-ghci-send-command ghci-reload-command)))
+  (deactivate-mark t)
+  (save-buffer)
+  (let* ((proc (stack-ghci-get-repl-proc)))
+    (comint-simple-send proc ghci-reload-command)))
 
-(defun stack-ghci-send-command (cmd)
+(defun stack-ghci-send-commands (cmd)
   "Send the command to the inferior ghci process."
-  (interactive)
+  (interactive "s:")
   (deactivate-mark t)
   (let* ((proc (stack-ghci-get-repl-proc)))
-    (comint-simple-send proc cmd)))
+    (comint-simple-send proc (format ":%s" cmd))))
 
 (defun stack-ghci-version ()
   "Show the `stack-ghci-mode' version in the echo area."
   (interactive)
   (message (conncat "stack-ghci-mode version " stack-ghci-mode-version)))
-
-(defun stack-ghci-send-sprint (x)
-  (interactive "s:sprint ")
-  (deactivate-mark t)
-  (let* ((proc (stack-ghci-get-repl-proc)))
-    (comint-simple-send proc (format ":sprint %s" x))))
-
-(defun stack-ghci-send-type (x)
-  (interactive "s:t ")
-  (deactivate-mark t)
-  (let* ((proc (stack-ghci-get-repl-proc)))
-    (comint-simple-send proc (format ":t %s" x))))
-
-(defun stack-ghci-send-add-module (x)
-  (interactive "s:m + ")
-  (deactivate-mark t)
-  (let* ((proc (stack-ghci-get-repl-proc)))
-    (comint-simple-send proc (format ":m + %s" x))))
 
 ;;
 ;; Menubar

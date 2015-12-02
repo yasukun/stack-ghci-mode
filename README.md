@@ -37,8 +37,6 @@ key             binding
 C-c C-b		stack-ghci-revert-buffer
 C-c C-g		stack-ghci-repl
 C-c C-l		stack-ghci-send-line
-C-c C-r		stack-ghci-send-region
-C-c C-s		stack-ghci-send-sprint
-C-c C-t		stack-ghci-send-type
+C-c C-s		stack-ghci-send-commands
 
 ```
